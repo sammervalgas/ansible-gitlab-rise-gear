@@ -1,4 +1,4 @@
-Ansible gitlab rise gear (Centos)
+Ansible Gitlab Rise Gear (Centos)
 =================
 Ansible role gitlab automation to create groups, subgroups and projects
 
