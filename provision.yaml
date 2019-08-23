@@ -1,0 +1,80 @@
+# ansible-gitlab-rise-gear - playbook
+- hosts: localhost
+  gather_facts: yes
+  tasks:
+  - set_fact:
+      access_token: GITLAB_TOKEN_HERE
+      group_name: GROUP_NAME_HERE
+      subgroup: SUBGROUP_NAME_HERE
+      inner_subgroup: INNER_SUBGROUP_NAME_HERE
+      inner_subgroup2: INNER_SUBGROUP_NAME_HERE
+      project: GITLAB_PROJECT_NAME
+      gitlab_url: GITLAB_URL_HERE
+      
+  - name: "Install python-pip"
+    become: yes
+    yum:
+      name: "{{ item }}"
+      state: present
+    with_items:
+      # - epel-release
+      - python-pip
+    delegate_to: localhost
+
+  - name: Upgrade pip
+    become: yes
+    shell: 'pip install --upgrade pip'
+    delegate_to: localhost
+
+  - name: Ensure python-gitlab is installed
+    become: yes
+    pip:
+      name: python-gitlab
+      state: present
+    delegate_to: localhost
+
+  - name: Create group gitlab
+    gitlab_group:
+      server_url: "{{gitlab_url}}"
+      # api_url: http://localhost/
+      validate_certs: false
+      api_token: "{{access_token}}"
+      name: "{{group_name}}"
+      path: "{{group_name}}"
+      state: present
+    delegate_to: localhost
+
+  - name: "Create Gitlab SubGroup"
+    gitlab_group:
+      server_url: "{{gitlab_url}}"
+      validate_certs: false
+      api_token: "{{access_token}}"
+      # api_password: "MyPassword"
+      # api_username: "MYUsername"
+      name: "{{item.name}}"
+      path: "{{item.name}}"
+      state: present
+      parent: "{{item.group}}"
+    with_items:
+      - { name: "{{subgroup}}",         group: "{{group_name}}" }
+      - { name: "{{inner_subgroup}}",   group: "{{group_name}}/{{subgroup}}" }
+      - { name: "{{inner_subgroup2}}",  group: "{{group_name}}/{{subgroup}}" }
+    delegate_to: localhost
+
+  - name: Create Gitlab Project in group Ansible
+    gitlab_project:
+      server_url: "{{gitlab_url}}"
+      api_token: "{{access_token}}"
+      validate_certs: False
+      name: my_project
+      group: "{{group_name}}/{{subgroup}}"
+      issues_enabled: False
+      wiki_enabled: False
+      snippets_enabled: False
+      # import_url: "http://localhost/example/my_project.git"
+      state: present
+    delegate_to: localhost
+    register: gitlab_project_result
+
+  - debug:
+      msg: "PROJECT CREATED SUCCESSFULLY --> URL: {{gitlab_project_result.project.http_url_to_repo}}"
