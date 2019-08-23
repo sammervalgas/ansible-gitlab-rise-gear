@@ -55,7 +55,7 @@ git clone https://github.com/sammervalgas/ansible-gitlab-rise-gear.git
 cd ansible-gitlab-rise-gear
 ansible-playbook provision.yaml
 ```
-> :warning: Note: My hosts configurarions are inside ansible.cfg
+> :warning: NOTE: My hosts configurations are inside ansible.cfg file.
 
 Author
 ---------------------
