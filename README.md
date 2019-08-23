@@ -33,6 +33,17 @@ sudo /bin/bash -c 'echo -e "127.0.0.1\ \t gitlab.example.com" >> /etc/hosts'
 Variables
 --------------------
 
+All variables are set within the file provision
+
+```yaml
+access_token: GITLAB_TOKEN_HERE
+group_name: GROUP_NAME_HERE
+subgroup: SUBGROUP_NAME_HERE
+inner_subgroup: INNER_SUBGROUP_NAME_HERE
+inner_subgroup2: INNER_SUBGROUP_NAME_HERE
+project: GITLAB_PROJECT_NAME
+gitlab_url: GITLAB_URL_HERE
+```
 
 Example
 ---------------------
