@@ -1,0 +1,3 @@
+---
+access_login: MY_GITLAB_TOKEN_LOGIN_OR_USER
+access_token: MY_GITLAB_TOKEN_OR_PASS

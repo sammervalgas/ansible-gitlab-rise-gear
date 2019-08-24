@@ -1,16 +1,48 @@
 # ansible-gitlab-rise-gear - playbook
 - hosts: localhost
   gather_facts: yes
+  vars_prompt:
+    - name: group_name
+      prompt: "\n-> Enter Gitlab Group Name"
+      default: "ansible-sample-group"
+      private: no
+
+    - name: subgroup
+      prompt: "\n-> Enter Gitlab Subgroup Name"
+      default: "app"
+      private: no
+
+    - name: inner_subgroup
+      prompt: "\n-> Enter Gitlab Folder Subgroup"
+      default: "libs"
+      private: no
+
+    - name: inner_subgroup2
+      prompt: "\n-> Enter Gitlab Folder Subgroup"
+      default: "web"
+      private: no
+
+    # - name: inner_subgroup
+    #   prompt: "\n-> ENTER GITLAB FOLDER SUBGROUP1"
+    #   default: "libs, web, n ..."
+    #   private: no
+
+    - name: project
+      prompt: "\n-> Enter Gitlab Project Name"
+      default: "ansible-project"
+      private: no
+
+    - name: project_type
+      prompt: "\n-> Enter Type of Project (app, web, dep) "
+      default: "app"
+      private: no
+
+    - name: gitlab_url
+      prompt: "\n-> Enter Gitlab URL"
+      default: "https://corp-git.ccorp.local"
+      private: no
+
   tasks:
-  - set_fact:
-      access_token: GITLAB_TOKEN_HERE
-      group_name: GROUP_NAME_HERE
-      subgroup: SUBGROUP_NAME_HERE
-      inner_subgroup: INNER_SUBGROUP_NAME_HERE
-      inner_subgroup2: INNER_SUBGROUP_NAME_HERE
-      project: GITLAB_PROJECT_NAME
-      gitlab_url: GITLAB_URL_HERE
-      
   - name: "Install python-pip"
     become: yes
     yum:
@@ -66,15 +98,59 @@
       server_url: "{{gitlab_url}}"
       api_token: "{{access_token}}"
       validate_certs: False
-      name: my_project
+      name: "{{project}}"
       group: "{{group_name}}/{{subgroup}}"
       issues_enabled: False
       wiki_enabled: False
       snippets_enabled: False
-      # import_url: "http://localhost/example/my_project.git"
+      # import_url: "http://gitlab.example.com/sample/app/my_project.git"
       state: present
     delegate_to: localhost
     register: gitlab_project_result
 
+  - set_fact:
+      gitlab_repo_url: "{{gitlab_project_result.project.http_url_to_repo}}"
+      working_dir: /tmp/checkout
+
+  - name: Create devops structure files
+    file:
+      path: "{{working_dir}}/devops"
+      state: directory
+      recurse: yes
+
+  - name: "Add devops templates"
+    template:
+      src: "{{item.src}}"
+      dest: "{{working_dir}}/devops/{{item.dest}}"
+    with_items:
+      - {src: Jenkinsfile.j2, dest: Jenkinsfile}
+      - {src: Dockerfile.j2,  dest: Dockerfile}
+
+  - name: "Create structure project for {{project}}"
+    shell: |
+          git clone "{{gitlab_repo_url|regex_replace('://', '://' + access_login + ':' + access_token + '@')}}"
+          cp -r ./devops/* ./"{{project}}"
+          cd ./"{{project}}"
+          # Push initial conf
+          git add .
+          git commit -m 'Initial Commit'
+          git push -u origin master
+          git checkout -b develop master && git push -u origin develop
+          sleep 2
+          git checkout -b release master && git push -u origin release
+          ######## FIXME ########
+          # Step bellow creates only develop branch, i don know why 8<(
+          #BRANCHES=(develop release)
+          #for branch in ${BRANCHES}; do git checkout -b $branch master && git push -u origin $branch; sleep 2; done
+
+    args:
+      chdir: "{{working_dir}}"
+    delegate_to: localhost
+
+  - name: Eliminate temporary files
+    file:
+      path: "{{working_dir}}"
+      state: absent
+
   - debug:
-      msg: "PROJECT CREATED SUCCESSFULLY --> URL: {{gitlab_project_result.project.http_url_to_repo}}"
+      msg: "PROJECT CREATED SUCCESSFULLY --> URL: {{gitlab_repo_url}}"

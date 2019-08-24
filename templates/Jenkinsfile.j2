@@ -1,0 +1,24 @@
+@Library('JenkinsLibs')
+
+import br.com.jenkinslibs.pipelines*
+
+{% if project_type|lower == 'app'  %}
+Pipeline pipe = new MSPipeline(this)
+pipe.run()
+
+{% elif project_type|lower == 'web' %}
+Pipeline pipe = new WEBPipeline(this)
+pipe.run()
+
+{% elif project_type|lower == 'dep' %}
+
+Pipeline pipe = new DependencyPipeline(this)
+pipe.run()
+
+{% else %}
+
+// Project type not found.
+// Please check if type project is app, web or dep.
+
+
+{% endif %}

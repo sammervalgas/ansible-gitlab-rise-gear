@@ -4,13 +4,13 @@ Ansible role gitlab automation to create groups, subgroups and projects
 
 Requirements
 ----------------
-* Docker 
+* Docker
 * Ansible >=2.8
 
 Environment (localhost)
 ----------------
 
-Run a gitlab-ce docker sample: 
+Run a gitlab-ce docker sample:
 ```bash
 docker pull gitlab/gitlab-ce:latest
 
@@ -33,17 +33,37 @@ sudo /bin/bash -c 'echo -e "127.0.0.1\ \t gitlab.example.com" >> /etc/hosts'
 Variables
 --------------------
 
-All variables are set within the file provision
+* All variables are set within the file provision with vars_prompt.
 
 ```yaml
-access_token: GITLAB_TOKEN_HERE
+# Credentials
+access_login: GITLAB_TOKEN_LOGIN_OR_USER
+access_token: GITLAB_TOKEN_OR_PASS
+# Project Setup
 group_name: GROUP_NAME_HERE
 subgroup: SUBGROUP_NAME_HERE
 inner_subgroup: INNER_SUBGROUP_NAME_HERE
 inner_subgroup2: INNER_SUBGROUP_NAME_HERE
 project: GITLAB_PROJECT_NAME
+project_type: app (java_microservices)/ web(angular_node)/ dep(dependencies_only)
 gitlab_url: GITLAB_URL_HERE
 ```
+
+* Change [hosts](hosts) file with your machine access types
+
+```yaml
+[localhost:vars]
+ansible_user=CHANGE_ME
+ansible_pass=CHANGE_ME
+ansible_become_pass=CHANGE_ME
+ansible_port=22
+ansible_connection=local
+ansible_host=127.0.0.1
+
+[localhost]
+127.0.0.1
+```
+
 
 Example
 ---------------------
@@ -53,9 +73,8 @@ Run the playbook:
 ```bash
 git clone https://github.com/sammervalgas/ansible-gitlab-rise-gear.git
 cd ansible-gitlab-rise-gear
-ansible-playbook provision.yaml
+ansible-playbook -i hosts provision.yaml
 ```
-> :warning: NOTE: My hosts configurations are inside ansible.cfg file.
 
 Author
 ---------------------
